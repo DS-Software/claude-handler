@@ -3,6 +3,7 @@ import config from "./config.js";
 import express from "express";
 import axios from "axios";
 import bodyParser from "body-parser";
+import e from "express";
 
 // Create Express app
 const app = express();
@@ -40,6 +41,7 @@ app.get("/info", async (req, res) => {
 app.post("/complete", async (req, res) => {
     try {
         let prompt = req.body.prompt;
+        let system = req.body.system ?? "";
         let token = req.query.token;
 
         if (!prompt) {
@@ -65,11 +67,46 @@ app.post("/complete", async (req, res) => {
             apiKey: config.tokens.claude,
         });
 
-        const msg = await anthropic.messages.create({
-            model: "claude-3-7-sonnet-20250219",
-            max_tokens: 1024,
-            messages: [{ role: "user", content: prompt }],
-        });
+        let msg;
+
+        if(system != ""){
+            msg = await anthropic.messages.create({
+                model: "claude-3-7-sonnet-20250219",
+                max_tokens: 1024,
+                system: system,
+                messages: [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": prompt
+                            }
+                        ]
+                    }
+                ]
+            });
+        }
+        else{
+            msg = await anthropic.messages.create({
+                model: "claude-3-7-sonnet-20250219",
+                max_tokens: 1024,
+                messages: [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": prompt
+                            }
+                        ]
+                    }
+                ]
+            });
+        }
+
+        msg = msg ?? {};
+
         console.log(msg);
 
         return res.json({ response: msg });
