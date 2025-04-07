@@ -74,6 +74,7 @@ app.post("/complete", async (req, res) => {
                 model: "claude-3-7-sonnet-20250219",
                 max_tokens: 1024,
                 system: system,
+                temperature: 0.7,
                 messages: [
                     {
                         "role": "user",
