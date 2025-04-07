@@ -1,8 +1,8 @@
-const config = require("./config");
-const axios = require("axios");
-const express = require("express");
-const bodyParser = require("body-parser");
-import Anthropic from '@anthropic-ai/sdk';
+import Anthropic from "@anthropic-ai/sdk";
+import config from "./config.js";
+import express from "express";
+import axios from "axios";
+import bodyParser from "body-parser";
 
 // Create Express app
 const app = express();
@@ -19,21 +19,21 @@ app.get("/info", async (req, res) => {
         if (!token) {
             return res.status(400).json({ success: false, remaining: 0 });
         }
-        
+
         const response = await axios.get(config.limit_handler, {
             params: {
                 token: token,
-                method: 'getLimits'
-            }
+                method: "getLimits",
+            },
         });
 
-        if(response.data.success){
+        if (response.data.success) {
             return res.json({ success: true, remaining: response.data.requests_left });
         }
-        
+
         return res.status(400).json({ success: false, remaining: 0 });
     } catch (error) {
-        res.status(500).json({ success: false, remaining: 0});
+        res.status(500).json({ success: false, remaining: 0 });
     }
 });
 
@@ -41,7 +41,7 @@ app.post("/complete", async (req, res) => {
     try {
         let prompt = req.body.prompt;
         let token = req.query.token;
-        
+
         if (!prompt) {
             return res.status(400).json({ error: "Prompt is required" });
         }
@@ -53,27 +53,28 @@ app.post("/complete", async (req, res) => {
         const token_response = await axios.get(config.limit_handler, {
             params: {
                 token: token,
-                method: 'consumeRequest'
-            }
+                method: "consumeRequest",
+            },
         });
 
-        if(token_response.data.success){
+        if (!token_response.data.success) {
             return res.json({ info: "Invalid Token or Out of Tokens", response: "" });
         }
-        
+
         const anthropic = new Anthropic({
             apiKey: config.tokens.claude,
-          });
-          
-          const msg = await anthropic.messages.create({
+        });
+
+        const msg = await anthropic.messages.create({
             model: "claude-3-7-sonnet-20250219",
             max_tokens: 1024,
             messages: [{ role: "user", content: prompt }],
-          });
-          console.log(msg);
+        });
+        console.log(msg);
 
-          return res.json({ response: msg });
+        return res.json({ response: msg });
     } catch (error) {
+        console.log(error);
         res.json({ info: "Internal Server Error", response: "" });
     }
 });
