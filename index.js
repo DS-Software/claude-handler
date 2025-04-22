@@ -3,7 +3,6 @@ import config from "./config.js";
 import express from "express";
 import axios from "axios";
 import bodyParser from "body-parser";
-import e from "express";
 
 // Create Express app
 const app = express();
